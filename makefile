@@ -12,3 +12,4 @@ main_semaphore.o :
 
 clean :
 	rm *.o ./a.out
+	ipcrm -S 0xdeadbeef
