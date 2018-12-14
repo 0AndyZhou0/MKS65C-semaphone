@@ -24,9 +24,9 @@ int main(int argc, char *argv[]){
       sem = semget(KEY, 1, IPC_CREAT | IPC_EXCL | 0644);
       if(sem == -1){
 	printf("error %d: %s\n", errno, strerror(errno));
-	sem = semget(KEY, 1, 0);
-	int v = semctl(sem, 0, GETVAL, 0);
-	printf("semctl returned: %d\n", v);
+	//sem = semget(KEY, 1, 0);
+	//int v = semctl(sem, 0, GETVAL, 0);
+	//printf("semctl returned: %d\n", v);
       }else{
 	//down
 	struct sembuf buf;
@@ -34,6 +34,7 @@ int main(int argc, char *argv[]){
 	buf.sem_flg = SEM_UNDO;
 	buf.sem_op = 0;
 	semop(sem,&buf,1);
+	printf("%d\n",sem);
 
 	//shared memory stuffz
 	key_t key = 823;
@@ -44,8 +45,8 @@ int main(int argc, char *argv[]){
 
 	//Enter line
 	printf("%s\n","Enter the line you want to enter");
-	char * line;
-        scanf("%[99^\n]\n", line);
+	char line[100];
+        scanf("%[^\n]", line);
 	strcpy(data, line);
 	shmdt(data);
 	
@@ -63,9 +64,9 @@ int main(int argc, char *argv[]){
       sem = semget(KEY, 1, 0);
       if(sem == -1){
 	printf("error %d: %s\n", errno, strerror(errno));
-	sem = semget(KEY, 1, 0);
-	int v = semctl(sem, 0, GETVAL, 0);
-	printf("semctl returned: %d\n", v);
+	//sem = semget(KEY, 1, 0);
+	//int v = semctl(sem, 0, GETVAL, 0);
+	//printf("semctl returned: %d\n", v);
       }else{
 	//down
 	struct sembuf buf;
@@ -83,6 +84,10 @@ int main(int argc, char *argv[]){
 
 	//Removes data
         shmctl(shmid, IPC_RMID, NULL);
+	shmdt(data);
+
+	//Removes the semaphore
+	semctl(sem, IPC_RMID, 0);
 	      
 	//up
 	buf.sem_op = 1;
@@ -93,9 +98,9 @@ int main(int argc, char *argv[]){
       sem = semget(KEY, 1, 0);
       if(sem == -1){
 	printf("error %d: %s\n", errno, strerror(errno));
-	sem = semget(KEY, 1, 0);
-	int v = semctl(sem, 0, GETVAL, 0);
-	printf("semctl returned: %d\n", v);
+	//sem = semget(KEY, 1, 0);
+	//int v = semctl(sem, 0, GETVAL, 0);
+	//printf("semctl returned: %d\n", v);
       }else{
 	//down
 	struct sembuf buf;
@@ -112,7 +117,11 @@ int main(int argc, char *argv[]){
 	data = shmat(shmid, (void *)0, 0);
 
 	//Views data
-	printf("data : %s\n",data);
+	if(data){
+	  printf("data : %s\n",data);
+	}else{
+	  printf("No data stored");
+	}
 	shmdt(data);
 	      
 	//up
