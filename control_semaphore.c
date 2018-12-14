@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/shm.h>
+#include <fcntl.h>
 
 #define KEY 0xdeadbeef
 
@@ -19,51 +20,33 @@ union semun {
 
 int main(int argc, char *argv[]){
   if(argc == 2){
+
+    //semaphore
     int sem;
+
+    //Shared memory stuffz
+    key_t key = 823;
+    int shmid;
+    char * data;
+
+    //file
+    int file;
+    
     if(!strcmp(argv[1],"-c")){
+      
+      //creates semaphore
       sem = semget(KEY, 1, IPC_CREAT | IPC_EXCL | 0644);
+      
       if(sem == -1){
 	printf("error %d: %s\n", errno, strerror(errno));
-	//sem = semget(KEY, 1, 0);
-	//int v = semctl(sem, 0, GETVAL, 0);
-	//printf("semctl returned: %d\n", v);
       }else{
-	//union semun un;
-	//un.val = 1;
-	//int r = semctl(sem, 0, SETVAL, un);
-	//printf("semctl returned: %d\n", r);
-
 	
-	//down
-	struct sembuf buf;
-	buf.sem_num = 1;
-	buf.sem_flg = SEM_UNDO;
-	buf.sem_op = -1;
-        if(semop(sem,&buf,1) == -1){
-	  printf("error %d: %s\n", errno, strerror(errno));
-	}
-
-	
-	//shared memory stuffz
-	key_t key = 823;
-	int shmid;
-	char * data;
-	shmid = shmget(key, 200, 0644 | IPC_CREAT);
+	//creates shared memory
+	shmid = shmget(key, 200, IPC_CREAT | IPC_EXCL | 0644);
 	data = shmat(shmid, (void *)0, 0);
 
-	
-	//Enter line
-	printf("%s\n","Enter the line you want to enter");
-	char line[100];
-        scanf("%[^\n]", line);
-	strcpy(data, line);
-	shmdt(data);
-
-	
-	//up
-	buf.sem_op = 1;
-	semop(sem,&buf,1);
-
+	//creates file
+	file = open("story.txt", O_CREAT | IPC_EXCL, 0644);
 	
       }
     }
@@ -71,43 +54,18 @@ int main(int argc, char *argv[]){
       sem = semget(KEY, 1, 0);
       if(sem == -1){
 	printf("error %d: %s\n", errno, strerror(errno));
-	//sem = semget(KEY, 1, 0);
-	//int v = semctl(sem, 0, GETVAL, 0);
-	//printf("semctl returned: %d\n", v);
       }else{
 
-	
-	//down
-	struct sembuf buf;
-	buf.sem_num = 1;
-	buf.sem_flg = SEM_UNDO;
-	buf.sem_op = -1;
-        if(semop(sem,&buf,1) == -1){
-	  printf("error %d: %s\n", errno, strerror(errno));
-	}
-
-	
-	//shared memory stuffz
-	key_t key = 823;
-	int shmid;
-	char * data;
-	shmid = shmget(key, 200, 0);
-	data = shmat(shmid, (void *)0, 0);
-
-	
-	//Removes data
-        shmctl(shmid, IPC_RMID, NULL);
-	shmdt(data);
-
-	
-	//Removes the semaphore
+	//removes the semaphore
 	semctl(sem, IPC_RMID, 0);
-
 	
-	//up
-	buf.sem_op = 1;
-	semop(sem,&buf,1);
-
+	//removes shared memory
+	shmid = shmget(key, 200, 0);
+        shmctl(shmid, IPC_RMID, NULL);
+	
+	//removes file
+	file = open("story.txt", O_RDONLY);
+	remove(file);
 	
       }
     }
@@ -115,44 +73,15 @@ int main(int argc, char *argv[]){
       sem = semget(KEY, 1, 0);
       if(sem == -1){
 	printf("error %d: %s\n", errno, strerror(errno));
-	//sem = semget(KEY, 1, 0);
-	//int v = semctl(sem, 0, GETVAL, 0);
-	//printf("semctl returned: %d\n", v);
       }else{
-
 	
-	//down
-	struct sembuf buf;
-	buf.sem_num = 1;
-	buf.sem_flg = SEM_UNDO;
-	buf.sem_op = -1;
-        if(semop(sem,&buf,1) == -1){
-	  printf("error %d: %s\n", errno, strerror(errno));
+        //views data in file
+	char line[100];
+        file = fopen("story.txt", "r");
+	while(fgets(line, 100, file)){
+	  printf("%s\n",line);
 	}
-
-	
-	//shared memory stuffz
-	key_t key = 823;
-	int shmid;
-	char * data;
-	shmid = shmget(key, 200, 0);
-	data = shmat(shmid, (void *)0, 0);
-
-	
-	//Views data
-	if(data){
-	  printf("data : %s\n",data);
-	}else{
-	  printf("No data stored");
-	}
-	shmdt(data);
-
-	
-	//up
-	buf.sem_op = 1;
-	semop(sem,&buf,1);
-
-	
+        
       }
     }
   }
