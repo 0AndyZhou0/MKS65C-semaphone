@@ -21,17 +21,27 @@ int main(){
   //shared memory stuffz
   key_t key = 12581;
   int shmid;
-  int * data;
+  //int * data
+  char * data;
   
   shmid = shmget(key, 200, 0644 | IPC_CREAT | IPC_EXCL);
   data = shmat(shmid, (void *)0, 0);
   if(shmid == -1){
-    printf("last line : %s",lastline);
+    printf("error %d: %s\n", errno, strerror(errno));
+    printf("last line : %s",data);
+    printf("%s\n","enter next line");
+    scanf("%[^\n]\n", line);
+    //*data = sizeof(line);
+    strcpy(data,line);
+    if(write(file, line, sizeof(line)) < 0){
+      exit(1);
+    }
   }else{
     printf("%s\n","this is the first line");
     scanf("%[^\n]\n", line);
-    *data = sizeof(line);
-    if(write(file, line, *data) < 0){
+    //*data = sizeof(line);
+    strcpy(data,line);
+    if(write(file, line, sizeof(line)) < 0){
       exit(1);
     }
   }

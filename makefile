@@ -1,6 +1,10 @@
 compile : control_semaphore.o main_semaphore.o
 	gcc main_semaphore.o
 
+setup : $(arg)
+	gcc -o setup control_semaphore.o
+	./setup $(arg)
+
 run :
 	./a.out
 
