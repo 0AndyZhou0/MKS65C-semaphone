@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 
 #define KEY 0xdeadbeef
@@ -30,7 +31,7 @@ int main(int argc, char *argv[]){
     char * data;
 
     //file
-    int file;
+    FILE * file;
     
     if(!strcmp(argv[1],"-c")){
       
@@ -46,7 +47,7 @@ int main(int argc, char *argv[]){
 	data = shmat(shmid, (void *)0, 0);
 
 	//creates file
-	file = open("story.txt", O_CREAT | IPC_EXCL, 0644);
+	int naming_convention = open("story.txt", O_CREAT | IPC_EXCL, 0644);
 	
       }
     }
@@ -64,8 +65,7 @@ int main(int argc, char *argv[]){
         shmctl(shmid, IPC_RMID, NULL);
 	
 	//removes file
-	file = open("story.txt", O_RDONLY);
-	remove(file);
+	remove("story.txt");
 	
       }
     }
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
 	while(fgets(line, 100, file)){
 	  printf("%s\n",line);
 	}
-        
+        fclose(file);
       }
     }
   }

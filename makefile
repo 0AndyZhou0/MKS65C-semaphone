@@ -1,5 +1,5 @@
 compile : control_semaphore.o main_semaphore.o
-	gcc control_semaphore.o
+	gcc main_semaphore.o
 
 run :
 	./a.out
